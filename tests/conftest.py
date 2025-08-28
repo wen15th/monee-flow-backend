@@ -1,18 +1,9 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.models.base import Base
-from dotenv import load_dotenv
-import os
+from src.config import DATABASE_URL
+import uuid
 
-
-load_dotenv()
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT")
-POSTGRES_DB = os.getenv("POSTGRES_DB")
-
-DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@db:{POSTGRES_PORT}/{POSTGRES_DB}"
 
 # Create db engine
 engine = create_engine(DATABASE_URL)
@@ -39,3 +30,8 @@ def db_session():
         # Rollback all test changes
         transaction.rollback()
         connection.close()
+
+
+@pytest.fixture(scope="session")
+def test_user_id():
+    return uuid.UUID("804659e9-6351-4723-b829-19a20f210bc6")

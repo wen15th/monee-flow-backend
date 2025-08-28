@@ -1,43 +1,48 @@
-from src.crud.statement_crud import create_statement, get_statement_by_id, get_statements_by_user
-from src.schemas.statement import StatementCreate
-from src.models import Statement
-from datetime import datetime
-from uuid import UUID
+import decimal
+
+from src.schemas.transaction import TransactionCreate
+from src.crud.transaction_crud import create_transaction, get_transactions_by_user, get_transaction_by_id
+from src.models import Transaction
+from datetime import date
 
 
-def test_create_statement(db_session):
+def test_create_transaction(db_session, test_user_id):
     """
     Test whether create_statement can insert data correctly
     """
-    statement_data = StatementCreate(
-        user_id="804659e9-6351-4723-b829-19a20f210bc6",
-        s3_key="path/to/statement.csv",
-        source="Test",
-        # Convert str to datetime
-        start_time=datetime.fromisoformat("2025-07-01 00:00:00"),
-        end_time=datetime.fromisoformat("2025-07-31 23:59:59"),
+    transaction_data = TransactionCreate(
+        user_id=test_user_id,
+        statement_id=11,
+        transaction_date=date.fromisoformat("2025-07-07"),
+        posted_date=date.fromisoformat("2025-07-08"),
+        merchant_name="RCSS #1009",
+        merchant_category="Grocery Stores and Supermarkets",
+        customized_category="",
+        # Use str to avoid floating point precision issues (e.g. 136.0399999999).
+        amount=decimal.Decimal("136.04")
     )
 
-    new_statement = create_statement(db_session, statement_data)
+    new_transaction = create_transaction(db_session, transaction_data)
 
     # Get inserted data and compare
-    inserted_statement = get_statement_by_id(db_session, new_statement.id)
+    inserted_statement = get_transaction_by_id(db_session, new_transaction.id)
 
-    assert inserted_statement.user_id == statement_data.user_id
-    assert inserted_statement.s3_key == statement_data.s3_key
-    assert inserted_statement.source == statement_data.source
-    assert inserted_statement.start_time == statement_data.start_time
-    assert inserted_statement.end_time == statement_data.end_time
+    assert inserted_statement.user_id == transaction_data.user_id
+    assert inserted_statement.statement_id == transaction_data.statement_id
+    assert inserted_statement.transaction_date == transaction_data.transaction_date
+    assert inserted_statement.posted_date == transaction_data.posted_date
+    assert inserted_statement.merchant_name == transaction_data.merchant_name
+    assert inserted_statement.merchant_category == transaction_data.merchant_category
+    assert inserted_statement.customized_category == transaction_data.customized_category
+    assert inserted_statement.amount == transaction_data.amount
 
 
-def test_get_statements_by_user(db_session):
-    user_id = UUID("804659e9-6351-4723-b829-19a20f210bc6")
-    statements = get_statements_by_user(db_session, user_id)
+def test_get_statements_by_user(db_session, test_user_id):
 
-    assert isinstance(statements, list)
-    for s in statements:
-        assert isinstance(s, Statement)
-        assert s.user_id == user_id
-        assert s.source == 'Test'
-        assert s.start_time == datetime.fromisoformat('2025-07-01 00:00:00')
-        assert s.end_time == datetime.fromisoformat('2025-07-01 23:59:59')
+    transactions = get_transactions_by_user(db_session, test_user_id)
+
+    assert isinstance(transactions, list)
+    for s in transactions:
+        assert isinstance(s, Transaction)
+        assert s.user_id == test_user_id
+        assert s.status == 1
