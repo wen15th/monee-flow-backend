@@ -13,8 +13,8 @@ class Statement(Base):
     end_time = Column(DateTime, nullable=False, server_default='1970-01-01 00:00:00')
     source = Column(String(50), nullable=True)  # TD, BMO, Rogers, etc.
     status = Column(SmallInteger, nullable=False, server_default='1')
-    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
         Index("idx_statements_user_id", "user_id"),
