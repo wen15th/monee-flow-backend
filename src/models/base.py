@@ -1,7 +1,7 @@
 # src/models/base.py
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from src.config import DATABASE_URL
+from src.core.config import DATABASE_URL
 
 
 # Create SQLAlchemy Engine
