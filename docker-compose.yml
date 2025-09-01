@@ -4,14 +4,11 @@ services:
   db:
     image: postgres:15
     container_name: monee-flow-db
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
   fastapi:
     build: .
     container_name: monee-flow-backend
@@ -19,9 +16,9 @@ services:
       - "8000:8000"
     volumes:
       - ./src:/app/src
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - ./.env:/app/.env
     depends_on:
       - db
+
 volumes:
   pgdata:
