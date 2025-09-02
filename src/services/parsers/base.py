@@ -4,7 +4,7 @@ import uuid
 
 class BaseBankParser(ABC):
     @abstractmethod
-    def parse(self, user_id: uuid.UUID, raw_data: list[dict], ctx: AppContext) -> list[dict]:
+    def parse(self, user_id: uuid.UUID, raw_data: list[dict]):
         """
         Parse the bank statement, return transaction list。
         Each dict includes:
