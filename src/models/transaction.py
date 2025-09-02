@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, Date, DECIMAL, SmallInteger, ForeignKey, DateTime, Index, CheckConstraint
+from sqlalchemy import Column, Integer, BigInteger, String, Date, DECIMAL, SmallInteger, ForeignKey, DateTime, Index, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from .base import Base
@@ -8,13 +8,12 @@ class Transaction(Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
-    statement_id = Column(BigInteger, ForeignKey("statements.id"), nullable=False, index=True)
-    transaction_date = Column(Date, nullable=False, server_default='1970-01-01')
-    posted_date = Column(Date, nullable=False, server_default='1970-01-01')
-    merchant_name = Column(String(255), nullable=True)
-    merchant_category = Column(String(255), nullable=True)
-    customized_category = Column(String(255), nullable=True)
+    date = Column(Date, nullable=False, server_default='1970-01-01')
+    description = Column(String(255), nullable=False, server_default='')
+    category_id = Column(Integer, nullable=False, server_default='0')
+    category_name = Column(String(255), nullable=False, server_default='')
     amount = Column(DECIMAL(10, 2), nullable=False)
+    statement_id = Column(BigInteger, nullable=False, index=True, server_default='0')
     status = Column(SmallInteger, nullable=False, server_default='1')
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())

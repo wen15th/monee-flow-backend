@@ -1,7 +1,7 @@
 import decimal
 
 from pydantic import BaseModel, ConfigDict, UUID4, Field, condecimal
-from typing import Optional
+from typing import Optional, List
 from datetime import date, datetime
 
 
@@ -30,3 +30,13 @@ class TransactionRead(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TransactionCategory(BaseModel):
+    norm_desc: str
+    category_id: int
+    category_name: str
+    note: str
+
+class TransactionCategoryList(BaseModel):
+    trans_category_list: List[TransactionCategory]

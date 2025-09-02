@@ -15,6 +15,15 @@ def create_transaction(db: Session, transaction_data: TransactionCreate) -> Tran
     return new_transaction
 
 
+def create_transactions_batch(db: Session, transactions: List[TransactionCreate]) -> None:
+    transactions_dicts = [tx.model_dump(exclude_unset=True) for tx in transactions]
+    new_transactions = [Transaction(**t_dict) for t_dict in transactions_dicts]
+
+    # Batch add
+    db.add_all(new_transactions)
+    db.commit()
+
+
 def get_transactions_by_user(
         db: Session,
         user_id: uuid.UUID,

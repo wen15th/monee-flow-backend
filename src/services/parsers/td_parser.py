@@ -9,7 +9,7 @@ import decimal
 import uuid
 
 class TDBankParser(BaseBankParser):
-    def parse(self, user_id: uuid.UUID, raw_data: list[dict], ctx: AppContext) -> list[TransactionCreate]:
+    def parse(self, user_id: uuid.UUID, raw_data: list[dict]):
         transactions = []
         desc_set = set()
 

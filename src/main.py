@@ -1,8 +1,18 @@
 import pandas as pd
 import os
+import logging
+import asyncio
 from src.services.parsers.factory import get_parser
 from src.core.app_context import AppContext, get_context
 from fastapi import FastAPI, Depends
+from functools import partial
+from fastapi import BackgroundTasks
+
+# Log conf
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 app = FastAPI()
 
@@ -12,8 +22,8 @@ def root():
     return {"message": "Monee Flow Backend is running 😁"}
 
 
-@app.get("/test_parser")
-def qw_test_parser(ctx: AppContext = Depends(get_context)):
+@app.post("/statement")
+async def statement(background_tasks: BackgroundTasks):
 
     user_id = '804659e9-6351-4723-b829-19a20f210bc6'
 
@@ -36,6 +46,7 @@ def qw_test_parser(ctx: AppContext = Depends(get_context)):
     raw_data = df.to_dict(orient='records')
 
     parser = get_parser('Rogers')
-    transactions = parser.parse(user_id, raw_data, ctx)
+    # background_tasks = BackgroundTasks()
+    background_tasks.add_task(parser.parse, user_id=user_id, raw_data=raw_data)
 
-    return transactions
+    return {"message": "Success"}
