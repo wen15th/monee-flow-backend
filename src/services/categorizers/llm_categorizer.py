@@ -1,4 +1,3 @@
-import asyncio
 import os
 import json
 import logging
@@ -53,20 +52,3 @@ class HFTransactionCategorizer:
         trans_category_list = json.loads(structured_data)['trans_category_list']
 
         return trans_category_list
-
-
-    # async def async_categorize_with_retry(self, transaction_descriptions: List[str], retries: int = 2, delay: int = 60):
-    #     for attempt in range(retries + 1):
-    #         logging.info(f"[HF API Call] start, attempt {attempt + 1}")
-    #         try:
-    #             loop = asyncio.get_event_loop()
-    #             result = await loop.run_in_executor(None, self.categorize, transaction_descriptions)
-    #             return result
-    #         except Exception as e:
-    #             logging.error(f"[HF API Call] failed at attempt {attempt + 1}: {e}")
-    #             if attempt < retries:
-    #                 await asyncio.sleep(delay * (attempt + 1))
-    #             else:
-    #                 # TODO
-    #                 # log_failure_to_db(transactions, e)
-    #                 return None
