@@ -1,10 +1,12 @@
 import logging
 
+
 from src.core.config import SessionLocal
 from .base import BaseBankParser
 from .utils import normalize_description, parse_date
 from src.schemas.transaction import TransactionCreate
-from src.crud.global_rule_crud import get_global_rule_by_norm_desc
+from src.schemas.global_rule import GlobalRuleCreate
+from src.crud.global_rule_crud import get_global_rule_by_norm_desc, create_global_rules_batch
 from src.crud.transaction_crud import create_transactions_batch
 from src.services.categorizers.llm_categorizer import HFTransactionCategorizer
 import uuid
@@ -61,6 +63,8 @@ class RogersBankParser(BaseBankParser):
             if uncat_desc_set:
                 categorizer = HFTransactionCategorizer()
                 auto_category_list = categorizer.categorize(list(uncat_desc_set))
+                # Build new global rules & uncategorized transactions
+                new_global_rules: list[GlobalRuleCreate] = [GlobalRuleCreate(**d) for d in auto_category_list]
                 trans_category_dict = {item['norm_desc']: item for item in auto_category_list}
                 for i in range(len(uncat_transactions)):
                     desc = uncat_transactions[i].description
@@ -69,11 +73,15 @@ class RogersBankParser(BaseBankParser):
                         uncat_transactions[i].category_name = trans_category_dict[desc]['category_name']
                     else:
                         failed_descs.append(desc)
+                # Save new categories to db
+                create_global_rules_batch(db, new_global_rules)
+                logging.info(
+                    f"[{self.__class__.__name__}] parse: save new global rules: {new_global_rules}")
 
             if failed_descs:
                 logging.error(f"LLM categorize failed. Uncategorized transaction descriptions/merchants: {failed_descs}")
 
-            # Save to db
+            # Save transactions to db
             transactions += uncat_transactions
             create_transactions_batch(db, transactions)
             logging.info(f"[{self.__class__.__name__}] parse: user_id={user_id}, parsed {len(transactions)} transactions")
