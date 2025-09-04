@@ -17,6 +17,7 @@ services:
     volumes:
       - ./src:/app/src
       - ./.env:/app/.env
+      - ./tmp_data:/app/tmp_data
     depends_on:
       - db
 
