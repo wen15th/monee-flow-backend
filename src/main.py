@@ -1,12 +1,18 @@
 import pandas as pd
-import os
-import logging
-import asyncio
+import os, logging, asyncio
+from datetime import datetime
 from src.services.parsers.factory import get_parser
+from src.services.statement_service import StatementService
 from src.core.app_context import AppContext, get_context
-from fastapi import FastAPI, Depends
+from src.schemas.enums import BankEnum
+from fastapi import FastAPI, Depends, BackgroundTasks, UploadFile, File, Form, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.core.db import get_async_session
 from functools import partial
-from fastapi import BackgroundTasks
+from pathlib import Path
+import uuid
+import asyncpg
+
 
 # Log conf
 logging.basicConfig(
@@ -23,30 +29,25 @@ def root():
 
 
 @app.post("/statement")
-async def statement(background_tasks: BackgroundTasks):
+async def upload_statement(
+        background_tasks: BackgroundTasks,
+        file: UploadFile = File(...),
+        user_id: uuid.UUID = Form(...),
+        bank: BankEnum = Form(...),
+        db: AsyncSession = Depends(get_async_session)
+):
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only .csv files are allowed.")
 
-    user_id = '804659e9-6351-4723-b829-19a20f210bc6'
+    # Save file
+    statement_service = StatementService()
+    file_path = await statement_service.save_statement_file(file, bank, user_id)
 
-    # TD
-    # column_names = ["Date", "Transaction Description", "Debit", "Credit", "Balance"]
-    #
-    # BASE_DIR = os.path.dirname(__file__)  # src 目录
-    # file_path = os.path.join(BASE_DIR, "tmp_data", "transactions_td_chequing.csv")
-    # df = pd.read_csv(file_path, names=column_names, dtype=str, header=None)
-    #
-    # raw_data = df.to_dict(orient='records')
-    #
-    # parser = get_parser('TD')
-    # transactions = parser.parse(user_id, raw_data, ctx)
+    # Save statement record to db
+    stmt_id = await statement_service.create_statement_record(db, user_id, bank, file_path)
 
-    # Rogers
-    BASE_DIR = os.path.dirname(__file__)  # src 目录
-    file_path = os.path.join(BASE_DIR, "tmp_data", "transactions_rogers.csv")
-    df = pd.read_csv(file_path, dtype=str)
-    raw_data = df.to_dict(orient='records')
+    # Run parser asynchronously after file upload
+    parser = get_parser(bank.value)
+    background_tasks.add_task(parser.parse, user_id=user_id, stmt_id=stmt_id, file_path=file_path)
 
-    parser = get_parser('Rogers')
-    # background_tasks = BackgroundTasks()
-    background_tasks.add_task(parser.parse, user_id=user_id, raw_data=raw_data)
-
-    return {"message": "Success"}
+    return {"message": "Upload successful", "file_path": file_path}

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from src.core.config import get_db
+from src.core.db import get_db
 from fastapi import Depends
 
 
