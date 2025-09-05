@@ -1,17 +1,13 @@
-import pandas as pd
-import os, logging, asyncio
-from datetime import datetime
+import logging
 from src.services.parsers.factory import get_parser
 from src.services.statement_service import StatementService
-from src.core.app_context import AppContext, get_context
 from src.schemas.enums import BankEnum
+from src.schemas.common import PaginatedResponse
+from src.schemas.statement import StatementRead
 from fastapi import FastAPI, Depends, BackgroundTasks, UploadFile, File, Form, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.db import get_async_session
-from functools import partial
-from pathlib import Path
 import uuid
-import asyncpg
 
 
 # Log conf
@@ -51,3 +47,13 @@ async def upload_statement(
     background_tasks.add_task(parser.parse, user_id=user_id, stmt_id=stmt_id, file_path=file_path)
 
     return {"message": "Upload successful", "file_path": file_path}
+
+# api
+@app.get("/statements", response_model=PaginatedResponse[StatementRead])
+async def get_statements(
+    user_id: uuid.UUID,
+    page: int = 1,
+    page_size: int = 10,
+    db: AsyncSession = Depends(get_async_session)
+):
+    return await StatementService.get_user_statements(db, user_id, page=page, page_size=page_size)
