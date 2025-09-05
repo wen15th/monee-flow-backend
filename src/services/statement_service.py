@@ -19,20 +19,17 @@ class StatementService:
         self.tmp_dir = Path(tmp_dir or os.getenv("TMP_DATA_PATH", "./tmp_data"))
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
 
-
     def get_user_dir(self, user_id: uuid.UUID) -> Path:
         """Get user dir and make sure it exists"""
         user_dir = self.tmp_dir / str(user_id)
         user_dir.mkdir(parents=True, exist_ok=True)
         return user_dir
 
-
     def generate_filename(self, original_name: str, bank: BankEnum) -> str:
         """Generate file name：bank_YYYYMMDD_HHMMSS.csv"""
         name, ext = os.path.splitext(original_name.strip())
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         return f"{bank.value}_{timestamp}{ext}"
-
 
     async def save_statement_file(
         self, file: UploadFile, bank: BankEnum, user_id: uuid.UUID
@@ -48,14 +45,9 @@ class StatementService:
 
         return str(save_path)
 
-
     @staticmethod
     async def create_statement_record(
-            self,
-            db: AsyncSession,
-            user_id: uuid.UUID,
-            bank: BankEnum,
-            file_path: str
+        self, db: AsyncSession, user_id: uuid.UUID, bank: BankEnum, file_path: str
     ):
         stmt_data = StatementCreate(
             user_id=user_id,
@@ -71,21 +63,22 @@ class StatementService:
         except Exception as e:
             logging.error(f"DB error: {e}")
 
-
     @staticmethod
     async def get_user_statements(
-            db: AsyncSession,
-            user_id: uuid.UUID,
-            page: int = 1,
-            page_size: int = 10,
-            status: Optional[int] = 1
+        db: AsyncSession,
+        user_id: uuid.UUID,
+        page: int = 1,
+        page_size: int = 10,
+        status: Optional[int] = 1,
     ) -> PaginatedResponse[StatementRead]:
         skip = (page - 1) * page_size
 
-        statements, total = await get_statements_by_user(db, user_id, status=status, skip=skip, limit=page_size)
+        statements, total = await get_statements_by_user(
+            db, user_id, status=status, skip=skip, limit=page_size
+        )
         return PaginatedResponse[StatementRead](
             items=[StatementRead.model_validate(stmt) for stmt in statements],
             total=total,
             page=page,
-            page_size=page_size
+            page_size=page_size,
         )
