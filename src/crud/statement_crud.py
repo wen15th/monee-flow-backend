@@ -16,11 +16,11 @@ async def create_statement(db: AsyncSession, statement_data: StatementCreate):
 
 
 async def get_statements_by_user(
-        db: AsyncSession,
-        user_id: uuid.UUID,
-        status: Optional[int] = 1,
-        skip: int = 0,
-        limit: Optional[int] = 10
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    status: Optional[int] = 1,
+    skip: int = 0,
+    limit: Optional[int] = 10,
 ):
     stmt = select(Statement).where(Statement.user_id == user_id)
     # Count
@@ -38,7 +38,7 @@ async def get_statements_by_user(
         stmt = stmt.offset(skip).limit(limit)
 
     result = await db.execute(stmt)
-    items = list(result.scalars().all())
+    items = result.scalars().all()
 
     return items, total
 
