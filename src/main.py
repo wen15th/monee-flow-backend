@@ -4,6 +4,7 @@ from src.services.transaction_service import TransactionService
 from src.schemas.transaction import TransactionRead
 from src.services.parsers.factory import get_parser
 from src.services.statement_service import StatementService
+from src.services.category_service import CategoryService
 from src.schemas.enums import BankEnum
 from src.schemas.common import PaginatedResponse
 from src.schemas.statement import StatementRead
@@ -95,3 +96,12 @@ async def get_transactions(
         page=page,
         page_size=page_size,
     )
+
+
+@app.get("/categories")
+async def get_user_categories(
+    user_id: str, db: AsyncSession = Depends(get_async_session)
+):
+    service = CategoryService(user_id)
+    categories = await service.get_user_available_categories(db)
+    return categories
