@@ -2,11 +2,14 @@
 import logging
 from pathlib import Path
 from fastapi import UploadFile
+from typing import Optional, List
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.schemas.common import PaginatedResponse
 from src.schemas.enums import BankEnum
-from src.schemas.statement import StatementCreate
-from src.crud.statement_crud import create_statement
+from src.schemas.statement import StatementCreate, StatementRead
+from src.crud.statement_crud import create_statement, get_statements_by_user
 import os
 import uuid
 
@@ -46,6 +49,7 @@ class StatementService:
         return str(save_path)
 
 
+    @staticmethod
     async def create_statement_record(
             self,
             db: AsyncSession,
@@ -66,3 +70,22 @@ class StatementService:
             return stmt_id
         except Exception as e:
             logging.error(f"DB error: {e}")
+
+
+    @staticmethod
+    async def get_user_statements(
+            db: AsyncSession,
+            user_id: uuid.UUID,
+            page: int = 1,
+            page_size: int = 10,
+            status: Optional[int] = 1
+    ) -> PaginatedResponse[StatementRead]:
+        skip = (page - 1) * page_size
+
+        statements, total = await get_statements_by_user(db, user_id, status=status, skip=skip, limit=page_size)
+        return PaginatedResponse[StatementRead](
+            items=[StatementRead.model_validate(stmt) for stmt in statements],
+            total=total,
+            page=page,
+            page_size=page_size
+        )
