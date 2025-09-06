@@ -1,5 +1,9 @@
+from typing import Optional
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.schemas.user_sys_category_pref import UserSysCategoryRead
 from src.models.user_sys_category_pref import UserSysCategoryPref
 
 
@@ -15,7 +19,9 @@ async def create_user_sys_category_pref(
     return db_obj
 
 
-async def get_user_sys_category_pref(db: AsyncSession, user_id: str, category_id: int):
+async def get_user_sys_category_pref(
+    db: AsyncSession, user_id: str, category_id: int
+) -> Optional[UserSysCategoryPref]:
     result = await db.execute(
         select(UserSysCategoryPref)
         .where(UserSysCategoryPref.user_id == user_id)

@@ -1,7 +1,9 @@
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.models.system_category import SystemCategory
-from src.schemas.system_category import SystemCategoryCreate
+from src.schemas.system_category import SystemCategoryCreate, SystemCategoryRead
+from typing import Optional
 
 
 async def create_system_category(db: AsyncSession, obj_in: SystemCategoryCreate):
@@ -12,7 +14,9 @@ async def create_system_category(db: AsyncSession, obj_in: SystemCategoryCreate)
     return db_obj
 
 
-async def get_system_category(db: AsyncSession, category_id: int):
+async def get_system_category(
+    db: AsyncSession, category_id: int
+) -> Optional[SystemCategory]:
     result = await db.execute(
         select(SystemCategory).where(SystemCategory.id == category_id)
     )
