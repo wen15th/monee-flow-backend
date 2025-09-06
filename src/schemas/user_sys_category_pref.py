@@ -5,13 +5,13 @@ from typing import Optional, List
 from datetime import date, datetime
 
 
-class UserCategoryCreate(BaseModel):
+class UserSysCategoryCreate(BaseModel):
     user_id: UUID4
     category_id: Optional[int] = 0
     is_enabled: Optional[int] = Field(default=True)
 
 
-class UserCategoryRead(BaseModel):
+class UserSysCategoryRead(BaseModel):
     id: int
     user_id: UUID4
     category_id: int

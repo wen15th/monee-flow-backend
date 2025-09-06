@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy import func
 from typing import Optional, List
+
 from src.models import Transaction
-from src.schemas.transaction import TransactionCreate
+from src.schemas.transaction import TransactionCreate, TransactionUpdate
 from datetime import date
 import uuid
 
@@ -67,5 +68,21 @@ async def get_transactions_by_user(
     return items, total
 
 
-def get_transaction_by_id(db: Session, transaction_id: int) -> Optional[Transaction]:
-    return db.query(Transaction).filter(Transaction.id == transaction_id).one_or_none()
+async def get_transaction_by_id(
+    db: AsyncSession, transaction_id: int
+) -> Optional[Transaction]:
+    result = await db.execute(
+        select(Transaction).where(Transaction.id == transaction_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def update_transaction(
+    db: AsyncSession, db_obj: Transaction, obj_in: TransactionUpdate
+) -> Transaction:
+    update_data = obj_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_obj, field, value)
+    await db.commit()
+    await db.refresh(db_obj)
+    return db_obj

@@ -1,7 +1,7 @@
 import logging
 
 from src.services.transaction_service import TransactionService
-from src.schemas.transaction import TransactionRead
+from src.schemas.transaction import TransactionRead, TransactionUpdate
 from src.services.parsers.factory import get_parser
 from src.services.statement_service import StatementService
 from src.services.category_service import CategoryService
@@ -98,7 +98,19 @@ async def get_transactions(
     )
 
 
-@app.get("/categories")
+@app.patch("/transaction/{transaction_id}", response_model=TransactionRead)
+async def update_transaction(
+    transaction_id: int,
+    user_id: uuid.UUID,
+    tx_update: TransactionUpdate,
+    db: AsyncSession = Depends(get_async_session),
+):
+    return await TransactionService.update_transaction(
+        db=db, transaction_id=transaction_id, user_id=user_id, tx_update=tx_update
+    )
+
+
+@app.get("/user_categories")
 async def get_user_categories(
     user_id: str, db: AsyncSession = Depends(get_async_session)
 ):

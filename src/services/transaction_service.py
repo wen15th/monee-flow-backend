@@ -1,10 +1,12 @@
 import uuid
+from fastapi import HTTPException
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.common import PaginatedResponse
-from src.schemas.transaction import TransactionRead
-from src.crud.transaction_crud import get_transactions_by_user
+from src.schemas.transaction import TransactionRead, TransactionUpdate
+from src.services.category_service import CategoryService
+from src.crud import transaction_crud
 from datetime import date
 from typing import Optional
 
@@ -21,7 +23,7 @@ class TransactionService:
     ) -> PaginatedResponse[TransactionRead]:
         """Fetch user transactions with pagination and optional date filtering."""
         skip = (page - 1) * page_size
-        items, total = await get_transactions_by_user(
+        items, total = await transaction_crud.get_transactions_by_user(
             db=db,
             user_id=user_id,
             start_date=start_date,
@@ -36,3 +38,27 @@ class TransactionService:
             page=page,
             page_size=page_size,
         )
+
+    @staticmethod
+    async def update_transaction(
+        db: AsyncSession,
+        transaction_id: int,
+        user_id: uuid.UUID,
+        tx_update: TransactionUpdate,
+    ):
+        db_obj = await transaction_crud.get_transaction_by_id(db, transaction_id)
+        if not db_obj:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+
+        if db_obj.user_id != user_id:
+            raise HTTPException(
+                status_code=403, detail="Not authorized to update this transaction"
+            )
+
+        # Verify category
+        category_service = CategoryService(str(user_id))
+        await category_service.check_user_category(
+            db=db, category_id=db_obj.category_id
+        )
+
+        return await transaction_crud.update_transaction(db, db_obj, tx_update)
