@@ -1,5 +1,6 @@
 import logging
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.api import users, statements, transactions, categories
 
 
@@ -10,6 +11,16 @@ logging.basicConfig(
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:5173",  # Front-end addr
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(users.router)
 app.include_router(statements.router)
