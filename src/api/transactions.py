@@ -1,3 +1,4 @@
+from src.core.auth import get_current_user
 from src.core.db import get_async_session
 from src.schemas.transaction import TransactionRead, TransactionUpdate
 from src.schemas.common import PaginatedResponse
@@ -8,7 +9,11 @@ from fastapi import Depends, Query, APIRouter
 from datetime import date
 import uuid
 
-router = APIRouter(prefix="/transactions", tags=["transactions"])
+router = APIRouter(
+    prefix="/transactions",
+    tags=["transactions"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.get("", response_model=PaginatedResponse[TransactionRead])
