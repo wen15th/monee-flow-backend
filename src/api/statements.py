@@ -1,3 +1,4 @@
+from src.core.auth import get_current_user
 from src.services.parsers.factory import get_parser
 from src.services.statement_service import StatementService
 from src.schemas.enums import BankEnum
@@ -16,7 +17,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.db import get_async_session
 import uuid
 
-router = APIRouter(prefix="/statements", tags=["statements"])
+router = APIRouter(
+    prefix="/statements", tags=["statements"], dependencies=[Depends(get_current_user)]
+)
 
 
 @router.post("")

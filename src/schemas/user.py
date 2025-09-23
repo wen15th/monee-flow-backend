@@ -35,3 +35,8 @@ class Token(BaseModel):
 # Token payload (internal)
 class TokenPayload(BaseModel):
     sub: Optional[str]  # User ID
+
+
+class AuthUser(BaseModel):
+    user_id: str
+    expire: Optional[int] = None
