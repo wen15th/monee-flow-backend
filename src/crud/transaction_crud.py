@@ -37,6 +37,8 @@ async def get_transactions_by_user(
     user_id: uuid.UUID,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    min_amount_out: Optional[int] = None,
+    max_amount_out: Optional[int] = None,
     skip: int = 0,
     limit: Optional[int] = 10,
 ):
@@ -49,6 +51,14 @@ async def get_transactions_by_user(
         stmt = stmt.where(Transaction.date >= start_date)
     elif end_date:
         stmt = stmt.where(Transaction.date <= end_date)
+
+    # Amount range filter
+    if min_amount_out and max_amount_out:
+        stmt = stmt.where(Transaction.amount.between(min_amount_out, max_amount_out))
+    elif min_amount_out:
+        stmt = stmt.where(Transaction.amount >= min_amount_out)
+    elif max_amount_out:
+        stmt = stmt.where(Transaction.amount <= max_amount_out)
 
     # Count
     count_stmt = select(func.count()).select_from(stmt.subquery())
