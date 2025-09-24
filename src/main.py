@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api import users, statements, transactions, categories
+from src.api import users, statements, transactions, categories, summary
 
 
 # Log conf
@@ -26,6 +26,7 @@ app.include_router(users.router)
 app.include_router(statements.router)
 app.include_router(transactions.router)
 app.include_router(categories.router)
+app.include_router(summary.router)
 
 
 @app.get("/")
