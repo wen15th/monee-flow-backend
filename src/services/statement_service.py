@@ -47,7 +47,7 @@ class StatementService:
 
     @staticmethod
     async def create_statement_record(
-        self, db: AsyncSession, user_id: uuid.UUID, bank: BankEnum, file_path: str
+        db: AsyncSession, user_id: uuid.UUID, bank: BankEnum, file_path: str
     ):
         stmt_data = StatementCreate(
             user_id=user_id,
