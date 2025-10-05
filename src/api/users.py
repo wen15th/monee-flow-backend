@@ -1,11 +1,13 @@
 import logging
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Cookie, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.services.user_service import UserService
 from src.schemas.user import UserCreate, UserRead, Token
 from src.core.db import get_async_session
+from typing import Optional
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -25,14 +27,7 @@ async def login(
     user = await UserService.authenticate_user(db, email, form_data.password)
     access_token = UserService.create_access_token(str(user.id))
     refresh_token = UserService.create_refresh_token(str(user.id))
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=True,  # Only via HTTPS
-        samesite="none",
-        max_age=60 * 60,  # 1 hour
-    )
+
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
@@ -42,12 +37,47 @@ async def login(
         max_age=60 * 60 * 24 * 7,  # 7 days
     )
 
-    return {"message": "Successful"}
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """
+    Logout user by deleting refresh_token cookie.
+    """
+    response.delete_cookie(
+        key="refresh_token", httponly=True, secure=True, samesite="lax"
+    )
+    return {"message": "Logged out successfully"}
 
 
 @router.post("/token/refresh", response_model=Token)
-async def refresh(refresh_token: str):
-    user_id = UserService.verify_refresh_token(refresh_token)
-    access_token = UserService.create_access_token(user_id)
-    new_refresh_token = UserService.create_refresh_token(user_id)
-    return Token(access_token=access_token, refresh_token=new_refresh_token)
+async def refresh(
+    response: Response,
+    refresh_token: Optional[str] = Cookie(None, alias="refresh_token"),
+):
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token not found")
+
+    try:
+        # Verify refresh token
+        user_id = UserService.verify_refresh_token(refresh_token)
+
+        # Generate new access tokens
+        access_token = UserService.create_access_token(user_id)
+        new_refresh_token = UserService.create_refresh_token(user_id)
+
+        # Set new refresh token cookie
+        response.set_cookie(
+            key="refresh_token",
+            value=new_refresh_token,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            max_age=60 * 60 * 24 * 7,  # 7 days
+        )
+
+        return Token(access_token=access_token)
+    except Exception as e:
+        logging.error(f"[AuthUser] Refresh token failed: {e}")
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
