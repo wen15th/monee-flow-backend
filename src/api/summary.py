@@ -17,7 +17,7 @@ router = APIRouter(prefix="", tags=["summary"])
 async def get_summary(
     start_date: Optional[date] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[date] = Query(None, description="End date (YYYY-MM-DD)"),
-    min_amount_out: Optional[int] = Query(None),
+    min_amount_out: int = Query(0),
     max_amount_out: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_async_session),
     user: AuthUser = Depends(get_current_user),

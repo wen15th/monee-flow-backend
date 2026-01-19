@@ -18,6 +18,8 @@ class TransactionService:
         user_id: uuid.UUID,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
+        min_amount_out: Optional[int] = None,
+        max_amount_out: Optional[int] = None,
         page: int = 1,
         page_size: int = 10,
     ) -> PaginatedResponse[TransactionRead]:
@@ -28,6 +30,8 @@ class TransactionService:
             user_id=user_id,
             start_date=start_date,
             end_date=end_date,
+            min_amount_out=min_amount_out,
+            max_amount_out=max_amount_out,
             skip=skip,
             limit=page_size,
         )

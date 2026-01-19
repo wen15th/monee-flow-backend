@@ -29,7 +29,7 @@ class BaseBankParser:
                 amount, formatted_date, norm_desc = self.extract_transaction_fields(
                     item
                 )
-                if amount is None:
+                if amount is None or amount < 0:
                     continue
 
                 # 1. Check global rules
