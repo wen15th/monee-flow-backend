@@ -53,11 +53,9 @@ async def get_transactions_by_user(
         stmt = stmt.where(Transaction.date <= end_date)
 
     # Amount range filter
-    if min_amount_out and max_amount_out:
-        stmt = stmt.where(Transaction.amount.between(min_amount_out, max_amount_out))
-    elif min_amount_out:
+    if min_amount_out is not None:
         stmt = stmt.where(Transaction.amount >= min_amount_out)
-    elif max_amount_out:
+    if max_amount_out is not None:
         stmt = stmt.where(Transaction.amount <= max_amount_out)
 
     # Count
