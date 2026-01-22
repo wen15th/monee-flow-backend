@@ -15,6 +15,7 @@ class UserRead(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
+    default_display_currency: str
     is_active: Optional[bool]
 
     model_config = ConfigDict(from_attributes=True)

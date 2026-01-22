@@ -35,6 +35,7 @@ def create_transactions_batch(
 async def get_transactions_by_user(
     db: AsyncSession,
     user_id: uuid.UUID,
+    currency: Optional[str] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     min_amount_out: Optional[int] = None,

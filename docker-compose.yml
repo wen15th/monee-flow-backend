@@ -16,6 +16,7 @@ services:
       - "8000:8000"
     volumes:
       - ./src:/app/src
+      - ./jobs:/app/jobs
       - ./.env:/app/.env
       - ./tmp_data:/app/tmp_data
     depends_on:
