@@ -1,5 +1,5 @@
+from typing import Optional
 from fastapi import HTTPException
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.schemas.system_category import SystemCategoryRead
 from src.schemas.user_category import UserCategoryRead
@@ -14,7 +14,7 @@ MAX_SYS_CAT_ID = 10000
 
 
 class CategoryService:
-    def __init__(self, user_id: str):
+    def __init__(self, user_id: Optional[str] = None):
         self.user_id = user_id
 
     async def get_user_available_categories(self, db: AsyncSession):
@@ -57,7 +57,9 @@ class CategoryService:
     async def check_user_category(self, db: AsyncSession, category_id: int) -> bool:
         # Check system_categories
         if category_id <= MAX_SYS_CAT_ID:
-            sys_cat = await system_category_crud.get_system_category(db, category_id)
+            sys_cat = await system_category_crud.get_system_category_by_id(
+                db, category_id
+            )
             if not sys_cat:
                 raise HTTPException(
                     status_code=400, detail=f"Category {category_id} does not exist"
@@ -81,3 +83,16 @@ class CategoryService:
                 )
 
         return True
+
+    @staticmethod
+    async def get_category_id_name_map(
+        db: AsyncSession,
+        category_ids: list[int],
+    ) -> dict[int, str]:
+        if not category_ids:
+            return {}
+
+        sys_cats = await system_category_crud.get_system_category_by_ids(
+            db=db, category_ids=category_ids
+        )
+        return {cat.id: cat.name for cat in sys_cats}

@@ -3,7 +3,7 @@ import httpx
 import logging
 from src.core.config import OER_APP_ID, OER_BASE_URL
 from src.core.db import AsyncSessionLocal
-from src.services.exchange_rate_service import write_daily_snapshot
+from src.services.exchange_rate_service import ExchangeRateService
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, Optional
@@ -77,11 +77,12 @@ async def main():
     # Write daily snapshot
     async with AsyncSessionLocal() as db:
         try:
-            inserted, updated = await write_daily_snapshot(
-                db,
+            exr_service = ExchangeRateService()
+            inserted, updated = await exr_service.write_daily_snapshot(
+                db=db,
                 timestamp=res.timestamp,
                 base_currency=res.base,
-                source="openexchangerates",
+                source=exr_service.SOURCE,
                 rates=res.rates,
             )
             await db.commit()

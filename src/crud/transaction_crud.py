@@ -35,7 +35,6 @@ def create_transactions_batch(
 async def get_transactions_by_user(
     db: AsyncSession,
     user_id: uuid.UUID,
-    currency: Optional[str] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     min_amount_out: Optional[int] = None,
@@ -47,11 +46,11 @@ async def get_transactions_by_user(
 
     # Date range filter
     if start_date and end_date:
-        stmt = stmt.where(Transaction.date.between(start_date, end_date))
+        stmt = stmt.where(Transaction.tx_date.between(start_date, end_date))
     elif start_date:
-        stmt = stmt.where(Transaction.date >= start_date)
+        stmt = stmt.where(Transaction.tx_date >= start_date)
     elif end_date:
-        stmt = stmt.where(Transaction.date <= end_date)
+        stmt = stmt.where(Transaction.tx_date <= end_date)
 
     # Amount range filter
     if min_amount_out is not None:
@@ -65,7 +64,7 @@ async def get_transactions_by_user(
     total = total_result.scalar_one()
 
     # Default sort: date desc, id desc
-    stmt = stmt.order_by(Transaction.date.desc(), Transaction.id.desc())
+    stmt = stmt.order_by(Transaction.tx_date.desc(), Transaction.id.desc())
 
     # Limit
     if limit is not None:

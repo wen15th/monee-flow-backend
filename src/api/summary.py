@@ -19,6 +19,7 @@ async def get_summary(
     end_date: Optional[date] = Query(None, description="End date (YYYY-MM-DD)"),
     min_amount_out: int = Query(0),
     max_amount_out: Optional[int] = Query(None),
+    display_currency: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_async_session),
     user: AuthUser = Depends(get_current_user),
 ):
@@ -29,4 +30,5 @@ async def get_summary(
         end_date=end_date,
         min_amount_out=min_amount_out,
         max_amount_out=max_amount_out,
+        display_currency=display_currency,
     )

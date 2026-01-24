@@ -19,8 +19,12 @@ class TransactionRead(BaseModel):
     user_id: UUID4
     tx_date: date
     amount: int
+    converted_amount: Optional[int] = None
+    rate_date_used: Optional[date] = None
     currency: str
+    display_currency: Optional[str] = None
     category_id: int
+    category_name: Optional[str] = None
     description: str
     statement_id: int
     status: int

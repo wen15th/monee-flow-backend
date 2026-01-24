@@ -1,5 +1,7 @@
 import logging
 import uuid
+from decimal import Decimal, ROUND_HALF_UP
+
 import pandas as pd
 from src.core.db import SessionLocal
 from src.schemas.transaction import TransactionCreate
@@ -13,7 +15,7 @@ from src.services.categorizers.llm_categorizer import HFTransactionCategorizer
 
 
 class BaseBankParser:
-    def parse(self, user_id: uuid.UUID, stmt_id: int, file_path: str):
+    def parse(self, user_id: uuid.UUID, stmt_id: int, currency: str, file_path: str):
         # Read file
         header = self.get_csv_header()
         df = pd.read_csv(file_path, header=None if header else "infer", names=header)
@@ -32,17 +34,22 @@ class BaseBankParser:
                 if amount is None or amount < 0:
                     continue
 
+                amount_minor = int(
+                    (amount * Decimal("100")).quantize(
+                        Decimal("1"), rounding=ROUND_HALF_UP
+                    )
+                )
                 # 1. Check global rules
                 global_rule = get_global_rule_by_norm_desc(db, norm_desc)
                 if global_rule:
                     transactions.append(
                         TransactionCreate(
                             user_id=user_id,
-                            date=formatted_date,
+                            tx_date=formatted_date,
                             description=norm_desc,
                             category_id=global_rule.category_id,
-                            category_name=global_rule.category_name,
-                            amount=amount,
+                            amount=amount_minor,
+                            currency=currency,
                             statement_id=stmt_id,
                         )
                     )
@@ -50,11 +57,11 @@ class BaseBankParser:
                     uncat_transactions.append(
                         TransactionCreate(
                             user_id=user_id,
-                            date=formatted_date,
+                            tx_date=formatted_date,
                             description=norm_desc,
                             category_id=0,
-                            category_name="",
-                            amount=amount,
+                            amount=amount_minor,
+                            currency=currency,
                             statement_id=stmt_id,
                         )
                     )
