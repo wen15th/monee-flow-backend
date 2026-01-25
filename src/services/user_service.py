@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from pydantic import EmailStr
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 from src.crud import user_crud
@@ -15,6 +16,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UserService:
+
+    def __init__(self, user_id: Optional[str] = None):
+        self.user_id = user_id
 
     @staticmethod
     async def register(db: AsyncSession, user_in: UserCreate) -> UserRead:
@@ -64,3 +68,7 @@ class UserService:
             return user_id
         except PyJWTError:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    async def get_user_by_id(self, db: AsyncSession) -> UserRead:
+        user = await user_crud.get_user_by_id(db=db, user_id=self.user_id)
+        return UserRead.model_validate(user)
