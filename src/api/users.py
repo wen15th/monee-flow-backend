@@ -3,6 +3,9 @@ import logging
 from fastapi import APIRouter, Depends, Response, Cookie, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.core.auth import get_current_user
+from src.schemas.user import AuthUser
 from src.services.user_service import UserService
 from src.schemas.user import UserCreate, UserRead, Token
 from src.core.db import get_async_session
@@ -81,3 +84,11 @@ async def refresh(
     except Exception as e:
         logging.error(f"[AuthUser] Refresh token failed: {e}")
         raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+
+@router.get("/me", response_model=UserRead)
+async def get_me(
+    db: AsyncSession = Depends(get_async_session),
+    user: AuthUser = Depends(get_current_user),
+):
+    return await UserService(user.user_id).get_user_by_id(db=db)

@@ -29,3 +29,9 @@ async def get_user_by_email(
 
     result = await db.execute(stmt)
     return result.scalars().first()
+
+
+async def get_user_by_id(db: AsyncSession, user_id: str) -> Optional[User]:
+    stmt = select(User).where(User.id == user_id)
+    result = await db.execute(stmt)
+    return result.scalars().first()
