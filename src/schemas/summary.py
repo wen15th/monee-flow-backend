@@ -4,13 +4,13 @@ from typing import Optional, List
 
 class CategorySummary(BaseModel):
     category: str
-    amount: float
+    amount: int
     percentage: float
 
 
 class MonthlySummary(BaseModel):
     month: str
-    amount: float
+    amount: int
 
 
 class SectionSummary(BaseModel):
@@ -22,4 +22,4 @@ class SectionSummary(BaseModel):
 class SummaryResponse(BaseModel):
     expenses: SectionSummary
     incomes: Optional[SectionSummary] = None
-    currency: Optional[str] = "CAD"
+    display_currency: Optional[str] = "USD"

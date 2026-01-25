@@ -8,7 +8,8 @@ class StatementCreate(BaseModel):
     s3_key: str
     start_time: datetime
     end_time: datetime
-    source: str = Field(default='')
+    source: str = Field(default="")
+    currency: str
     status: Optional[int] = Field(default=1)
 
 
@@ -19,6 +20,7 @@ class StatementRead(BaseModel):
     start_time: datetime
     end_time: datetime
     source: Optional[str]
+    currency: str
     status: int
     created_at: datetime
     updated_at: datetime

@@ -14,13 +14,20 @@ async def create_system_category(db: AsyncSession, obj_in: SystemCategoryCreate)
     return db_obj
 
 
-async def get_system_category(
+async def get_system_category_by_id(
     db: AsyncSession, category_id: int
 ) -> Optional[SystemCategory]:
     result = await db.execute(
         select(SystemCategory).where(SystemCategory.id == category_id)
     )
     return result.scalar_one_or_none()
+
+
+async def get_system_category_by_ids(db: AsyncSession, category_ids: list[int]):
+    result = await db.execute(
+        select(SystemCategory).where(SystemCategory.id.in_(category_ids))
+    )
+    return result.scalars().all()
 
 
 async def list_system_categories(db: AsyncSession, skip: int = 0, limit: int = 100):
@@ -33,4 +40,4 @@ async def update_system_category(db: AsyncSession, category_id: int, values: dic
         update(SystemCategory).where(SystemCategory.id == category_id).values(**values)
     )
     await db.commit()
-    return await get_system_category(db, category_id)
+    return await get_system_category_by_id(db, category_id)

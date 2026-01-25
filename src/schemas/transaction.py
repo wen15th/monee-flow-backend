@@ -1,15 +1,15 @@
-from pydantic import BaseModel, ConfigDict, UUID4, Field, condecimal
+from pydantic import BaseModel, ConfigDict, UUID4, Field
 from typing import Optional, List
 from datetime import date, datetime
 
 
 class TransactionCreate(BaseModel):
     user_id: UUID4
-    date: date
-    description: str
+    tx_date: date
+    amount: int
+    currency: str
     category_id: Optional[int] = 0
-    category_name: Optional[str] = ""
-    amount: condecimal(max_digits=10, decimal_places=2)
+    description: str
     statement_id: Optional[int] = 0
     status: Optional[int] = Field(default=1)
 
@@ -17,11 +17,15 @@ class TransactionCreate(BaseModel):
 class TransactionRead(BaseModel):
     id: int
     user_id: UUID4
-    date: date
-    description: str
+    tx_date: date
+    amount: int
+    converted_amount: Optional[int] = None
+    rate_date_used: Optional[date] = None
+    currency: str
+    display_currency: Optional[str] = None
     category_id: int
-    category_name: str
-    amount: condecimal(max_digits=10, decimal_places=2)
+    category_name: Optional[str] = None
+    description: str
     statement_id: int
     status: int
     created_at: datetime
@@ -42,8 +46,7 @@ class TransactionCategoryList(BaseModel):
 
 
 class TransactionUpdate(BaseModel):
-    date: Optional[date] = None
+    tx_date: Optional[date] = None
     category_id: Optional[int] = None
-    category_name: Optional[str] = None
-    amount: Optional[condecimal(max_digits=10, decimal_places=2)] = None
+    amount: Optional[int] = None
     status: Optional[int] = None

@@ -28,6 +28,7 @@ async def upload_statement(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     bank: BankEnum = Form(...),
+    currency: str = Form(...),
     db: AsyncSession = Depends(get_async_session),
     user: AuthUser = Depends(get_current_user),
 ):
@@ -42,13 +43,17 @@ async def upload_statement(
 
     # Save statement record to db
     stmt_id = await statement_service.create_statement_record(
-        db=db, user_id=user_id, bank=bank, file_path=file_path
+        db=db, user_id=user_id, bank=bank, currency=currency, file_path=file_path
     )
 
     # Run parser asynchronously after file upload
     parser = get_parser(bank.value)
     background_tasks.add_task(
-        parser.parse, user_id=user_id, stmt_id=stmt_id, file_path=file_path
+        parser.parse,
+        user_id=user_id,
+        stmt_id=stmt_id,
+        currency=currency,
+        file_path=file_path,
     )
 
     return {"message": "Upload successful", "file_path": file_path}

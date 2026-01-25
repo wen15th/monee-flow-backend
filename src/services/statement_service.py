@@ -47,7 +47,11 @@ class StatementService:
 
     @staticmethod
     async def create_statement_record(
-        db: AsyncSession, user_id: uuid.UUID, bank: BankEnum, file_path: str
+        db: AsyncSession,
+        user_id: uuid.UUID,
+        bank: BankEnum,
+        currency: str,
+        file_path: str,
     ):
         stmt_data = StatementCreate(
             user_id=user_id,
@@ -56,6 +60,7 @@ class StatementService:
             start_time=datetime(1970, 1, 1),
             end_time=datetime(1970, 1, 1),
             source=bank.value,
+            currency=currency,
         )
         try:
             stmt_id = await create_statement(db, stmt_data)

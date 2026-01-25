@@ -21,3 +21,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
+
+# Open Exchange Rates app_id
+OER_APP_ID = os.getenv("OER_APP_ID", "")
+OER_BASE_URL = os.getenv("OER_BASE_URL", "")
