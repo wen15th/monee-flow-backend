@@ -19,6 +19,7 @@ class BaseBankParser:
         # Read file
         header = self.get_csv_header()
         df = pd.read_csv(file_path, header=None if header else "infer", names=header)
+        df = df.fillna("")
         raw_data = df.to_dict(orient="records")
 
         transactions = []
@@ -31,6 +32,7 @@ class BaseBankParser:
                 amount, formatted_date, norm_desc = self.extract_transaction_fields(
                     item
                 )
+                # TODO: Save income too
                 if amount is None or amount < 0:
                     continue
 
@@ -80,7 +82,6 @@ class BaseBankParser:
                     if t.description in trans_category_dict:
                         cat = trans_category_dict[t.description]
                         t.category_id = cat["category_id"]
-                        t.category_name = cat["category_name"]
                     else:
                         failed_descs.append(t.description)
 

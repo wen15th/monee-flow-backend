@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
-from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import select, update, func
 from typing import Optional, List
 
 from src.models import Transaction
@@ -39,6 +38,7 @@ async def get_transactions_by_user(
     end_date: Optional[date] = None,
     min_amount_out: Optional[int] = None,
     max_amount_out: Optional[int] = None,
+    status: Optional[int] = None,
     skip: int = 0,
     limit: Optional[int] = 10,
 ):
@@ -57,6 +57,10 @@ async def get_transactions_by_user(
         stmt = stmt.where(Transaction.amount >= min_amount_out)
     if max_amount_out is not None:
         stmt = stmt.where(Transaction.amount <= max_amount_out)
+
+    # Status
+    if status is not None:
+        stmt = stmt.where(Transaction.status == status)
 
     # Count
     count_stmt = select(func.count()).select_from(stmt.subquery())
@@ -94,3 +98,19 @@ async def update_transaction(
     await db.commit()
     await db.refresh(db_obj)
     return db_obj
+
+
+async def soft_delete_by_statement_id(
+    *,
+    db: AsyncSession,
+    statement_id,
+    deleted_status: int,
+) -> int:
+    q = (
+        update(Transaction)
+        .where(Transaction.statement_id == statement_id)
+        .where(Transaction.status != deleted_status)
+        .values(status=deleted_status)
+    )
+    res = await db.execute(q)
+    return res.rowcount or 0

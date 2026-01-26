@@ -26,3 +26,11 @@ class StatementRead(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class StatementDeleteResult(BaseModel):
+    statement_id: int
+    deleted: bool
+    transactions_affected: int
+    file_deleted: bool
+    file_delete_error: Optional[str] = None

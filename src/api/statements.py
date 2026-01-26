@@ -4,7 +4,7 @@ from src.services.statement_service import StatementService
 from src.schemas.enums import BankEnum
 from src.schemas.user import AuthUser
 from src.schemas.common import PaginatedResponse
-from src.schemas.statement import StatementRead
+from src.schemas.statement import StatementRead, StatementDeleteResult
 from fastapi import (
     Depends,
     BackgroundTasks,
@@ -13,6 +13,8 @@ from fastapi import (
     Form,
     HTTPException,
     APIRouter,
+    Query,
+    Response,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.db import get_async_session
@@ -70,3 +72,26 @@ async def get_statements(
     return await StatementService.get_user_statements(
         db, uuid.UUID(user.user_id), page=page, page_size=page_size
     )
+
+
+@router.delete("/{statement_id}", response_model=StatementDeleteResult)
+async def delete_statement(
+    statement_id: int,
+    delete_transactions: bool = Query(True),
+    db: AsyncSession = Depends(get_async_session),
+    user: AuthUser = Depends(get_current_user),
+):
+    user_id = uuid.UUID(user.user_id)
+    service = StatementService()
+
+    try:
+        return await service.delete_statement(
+            db=db,
+            user_id=user_id,
+            statement_id=statement_id,
+            delete_transactions=delete_transactions,
+        )
+    except StatementService.NotFoundOrNoAccess:
+        raise HTTPException(status_code=404, detail="Statement not found.")
+    except StatementService.Conflict:
+        raise HTTPException(status_code=409, detail="Statement is being processed.")
