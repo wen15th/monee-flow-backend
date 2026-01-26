@@ -23,7 +23,9 @@ def normalize_description(desc: str) -> str:
     text = re.sub(r"/(?=[A-Za-z0-9]*[A-Za-z])(?=[A-Za-z0-9]*\d)[A-Za-z0-9]+$", "", text)
 
     # 3) Remove '*suffix' with letters+digits, e.g. '*NI3HV3DJ1'
-    text = re.sub(r"\*(?=[A-Za-z0-9]*[A-Za-z])(?=[A-Za-z0-9]*\d)[A-Za-z0-9]+$", "", text)
+    text = re.sub(
+        r"\*(?=[A-Za-z0-9]*[A-Za-z])(?=[A-Za-z0-9]*\d)[A-Za-z0-9]+$", "", text
+    )
 
     # 4) Remove '******1234' (card numbers)
     text = re.sub(r"\*{2,}\d+$", "", text)
@@ -36,10 +38,17 @@ def normalize_description(desc: str) -> str:
     text = re.sub(r"\s+\d+$", "", text)
 
     # 7) Remove common transaction network / suffix identifiers
-    text = re.sub(r'\s*_(V|M|MC|AX|AMEX|DS|DISC|P|I|WD|DEP|TFR|BP|INT)$', '', text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"\s*_(V|M|MC|AX|AMEX|DS|DISC|P|I|WD|DEP|TFR|BP|INT)$",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
 
     # 8)
-    text = re.sub(r"\b(?:[A-Za-z]\d){3,}[A-Za-z]?\b|\b(?:\d[A-Za-z]){3,}\d?\b", '', text)
+    text = re.sub(
+        r"\b(?:[A-Za-z]\d){3,}[A-Za-z]?\b|\b(?:\d[A-Za-z]){3,}\d?\b", "", text
+    )
 
     # Convert to uppercase
     return text.strip().upper()
@@ -53,3 +62,11 @@ def parse_date(date_str: str) -> Optional[date]:
         except ValueError:
             continue
     return None
+
+
+def first_non_empty(item: dict, *keys: str) -> str:
+    for k in keys:
+        v = item.get(k)
+        if v not in (None, ""):
+            return str(v).strip()
+    return ""

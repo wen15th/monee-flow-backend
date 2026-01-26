@@ -27,6 +27,7 @@ class SummaryService:
         min_amount_out: Optional[int] = None,
         max_amount_out: Optional[int] = None,
         display_currency: Optional[str] = None,
+        status: Optional[int] = 1,
     ) -> SummaryResponse:
 
         min_amount_out_minor = (
@@ -44,6 +45,7 @@ class SummaryService:
             end_date=end_date,
             min_amount_out=min_amount_out_minor,
             max_amount_out=max_amount_out_minor,
+            status=status,
             limit=None,
         )
 
