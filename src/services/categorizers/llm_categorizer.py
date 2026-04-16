@@ -17,7 +17,7 @@ class HFTransactionCategorizer:
         model_name: str = "meta-llama/Llama-3.3-70B-Instruct",
         providers: List[str] = None,
     ):
-        self.providers = providers or ["cerebras"]
+        self.providers = providers or ["fireworks-ai", "novita", "groq"]
         self.model_name = model_name
 
         self.response_format = ChatCompletionInputResponseFormatJSONSchema(
