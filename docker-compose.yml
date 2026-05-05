@@ -19,6 +19,8 @@ services:
       - ./jobs:/app/jobs
       - ./.env:/app/.env
       - ./tmp_data:/app/tmp_data
+    environment:
+      - UVICORN_OPTIONS=--reload
     depends_on:
       - db
 
