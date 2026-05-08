@@ -5,3 +5,4 @@ from .statement import Statement
 from .transaction import Transaction
 from .user import User
 from .global_rule import GlobalRule
+from .exchange_rate import ExchangeRate
