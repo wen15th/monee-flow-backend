@@ -18,9 +18,12 @@ DATABASE_URL_ASYNC = (
     f"{config.POSTGRES_PORT}/{config.POSTGRES_DB}"
 )
 
+print(DATABASE_URL_ASYNC)
+
 """Create sync engine"""
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def get_db():
     db = SessionLocal()
@@ -33,10 +36,9 @@ def get_db():
 """Create async engine"""
 async_engine = create_async_engine(DATABASE_URL_ASYNC, echo=True, future=True)
 AsyncSessionLocal = async_sessionmaker(
-    bind=async_engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    bind=async_engine, class_=AsyncSession, expire_on_commit=False
 )
+
 
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
