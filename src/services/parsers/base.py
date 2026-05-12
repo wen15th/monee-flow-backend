@@ -1,9 +1,11 @@
+import io
 import logging
 import uuid
 from decimal import Decimal, ROUND_HALF_UP
 
 import pandas as pd
 from src.core.db import SessionLocal
+from src.core import s3
 from src.schemas.transaction import TransactionCreate
 from src.schemas.global_rule import GlobalRuleCreate
 from src.crud.global_rule_crud import (
@@ -16,9 +18,10 @@ from src.services.categorizers.llm_categorizer import HFTransactionCategorizer
 
 class BaseBankParser:
     def parse(self, user_id: uuid.UUID, stmt_id: int, currency: str, file_path: str):
-        # Read file
+        # Download from S3 and read
         header = self.get_csv_header()
-        df = pd.read_csv(file_path, header=None if header else "infer", names=header)
+        content = s3.download_file(file_path)
+        df = pd.read_csv(io.BytesIO(content), header=None if header else "infer", names=header)
         df = df.fillna("")
         raw_data = df.to_dict(orient="records")
 
