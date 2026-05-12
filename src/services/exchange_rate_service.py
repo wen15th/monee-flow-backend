@@ -2,7 +2,7 @@ from datetime import datetime, timezone, date
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, Tuple, Set, List, Sequence, Optional
 
-from black.trans import defaultdict
+from collections import defaultdict
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.crud.exchange_rates_crud import (
     get_best_rate_date,
