@@ -36,7 +36,7 @@ async def login(
         value=refresh_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         max_age=60 * 60 * 24 * 7,  # 7 days
     )
 
@@ -49,7 +49,7 @@ async def logout(response: Response):
     Logout user by deleting refresh_token cookie.
     """
     response.delete_cookie(
-        key="refresh_token", httponly=True, secure=True, samesite="lax"
+        key="refresh_token", httponly=True, secure=True, samesite="none"
     )
     return {"message": "Logged out successfully"}
 
@@ -76,7 +76,7 @@ async def refresh(
             value=new_refresh_token,
             httponly=True,
             secure=True,
-            samesite=None,
+            samesite="none",
             max_age=60 * 60 * 24 * 7,  # 7 days
         )
 
