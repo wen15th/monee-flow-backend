@@ -76,7 +76,7 @@ async def refresh(
             value=new_refresh_token,
             httponly=True,
             secure=True,
-            samesite="lax",
+            samesite=None,
             max_age=60 * 60 * 24 * 7,  # 7 days
         )
 
