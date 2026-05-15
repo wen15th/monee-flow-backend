@@ -36,6 +36,7 @@ async def get_transactions_by_user(
     user_id: uuid.UUID,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    category_id: Optional[int] = None,
     min_amount_out: Optional[int] = None,
     max_amount_out: Optional[int] = None,
     status: Optional[int] = None,
@@ -51,6 +52,10 @@ async def get_transactions_by_user(
         stmt = stmt.where(Transaction.tx_date >= start_date)
     elif end_date:
         stmt = stmt.where(Transaction.tx_date <= end_date)
+
+    # Category
+    if category_id:
+        stmt = stmt.where(Transaction.category_id == category_id)
 
     # Amount range filter
     if min_amount_out is not None:

@@ -3,6 +3,7 @@ from typing import Optional, List
 
 
 class CategorySummary(BaseModel):
+    id: int
     category: str
     amount: int
     percentage: float
