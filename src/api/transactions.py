@@ -21,6 +21,7 @@ router = APIRouter(
 async def get_transactions(
     start_date: Optional[date] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[date] = Query(None, description="End date (YYYY-MM-DD)"),
+    category_id: Optional[int] = Query(None, description="Category ID"),
     min_amount_out: int = Query(0),
     max_amount_out: Optional[int] = Query(None),
     display_currency: Optional[str] = Query(None),
@@ -34,6 +35,7 @@ async def get_transactions(
         user_id=uuid.UUID(user.user_id),
         start_date=start_date,
         end_date=end_date,
+        category_id=category_id,
         min_amount_out=min_amount_out,
         max_amount_out=max_amount_out,
         display_currency=display_currency,

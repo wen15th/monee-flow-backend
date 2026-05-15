@@ -73,7 +73,8 @@ class SummaryService:
 
         for i, tx in enumerate(items):
             # Category -> amount
-            category_totals[cat_id_name_map[tx.category_id]] += display_amounts[i]
+            cat_key = (tx.category_id, cat_id_name_map[tx.category_id])
+            category_totals[cat_key] += display_amounts[i]
             # Month -> amount
             month_str = tx.tx_date.strftime("%Y-%m")
             monthly_totals[month_str] += display_amounts[i]
@@ -81,7 +82,8 @@ class SummaryService:
         # Build category expense list
         category_expenses = [
             CategorySummary(
-                category=cat,
+                id=cat_id,
+                category=cat_name,
                 amount=amt,
                 percentage=(
                     round(float(amt / total_expenses * 100), 1)
@@ -89,7 +91,7 @@ class SummaryService:
                     else 0.0
                 ),
             )
-            for cat, amt in category_totals.items()
+            for (cat_id, cat_name), amt in category_totals.items()
         ]
 
         # Build monthly expense list
