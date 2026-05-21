@@ -112,10 +112,11 @@ class TransactionService:
                 status_code=403, detail="Not authorized to update this transaction"
             )
 
-        # Verify category
-        category_service = CategoryService(str(user_id))
-        await category_service.check_user_category(
-            db=db, category_id=db_obj.category_id
-        )
+        # Verify the new category only if it's being changed
+        if tx_update.category_id is not None:
+            category_service = CategoryService(str(user_id))
+            await category_service.check_user_category(
+                db=db, category_id=tx_update.category_id
+            )
 
         return await transaction_crud.update_transaction(db, db_obj, tx_update)
