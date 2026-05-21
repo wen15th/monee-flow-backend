@@ -1,8 +1,10 @@
 from src.core.auth import get_current_user
+from src.schemas.user import AuthUser
 from src.core.db import get_async_session
 from src.services.category_service import CategoryService
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, APIRouter
+import uuid
 
 
 router = APIRouter(
@@ -14,8 +16,9 @@ router = APIRouter(
 
 @router.get("")
 async def get_user_categories(
-    user_id: str, db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_session),
+    user: AuthUser = Depends(get_current_user),
 ):
-    service = CategoryService(user_id)
-    categories = await service.get_user_available_categories(db)
+    service = CategoryService(uuid.UUID(user.user_id))
+    categories = await service.get_user_available_categories(db=db)
     return categories

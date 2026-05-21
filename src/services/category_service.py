@@ -8,13 +8,13 @@ from src.crud import (
     user_category_crud,
     user_sys_category_prefs_crud,
 )
-
+import uuid
 
 MAX_SYS_CAT_ID = 10000
 
 
 class CategoryService:
-    def __init__(self, user_id: Optional[str] = None):
+    def __init__(self, user_id: uuid.UUID = None):
         self.user_id = user_id
 
     async def get_user_available_categories(self, db: AsyncSession):

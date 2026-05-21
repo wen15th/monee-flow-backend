@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.user_category import UserCategory
@@ -20,7 +22,7 @@ async def get_user_category(db: AsyncSession, category_id: int):
 
 
 async def list_user_categories(
-    db: AsyncSession, user_id: str, skip: int = 0, limit: int = 100
+    db: AsyncSession, user_id: uuid.UUID, skip: int = 0, limit: int = 100
 ):
     result = await db.execute(
         select(UserCategory)

@@ -49,4 +49,3 @@ class TransactionUpdate(BaseModel):
     tx_date: Optional[date] = None
     category_id: Optional[int] = None
     amount: Optional[int] = None
-    status: Optional[int] = None
