@@ -6,7 +6,7 @@ from src.schemas.common import PaginatedResponse
 from src.services.transaction_service import TransactionService
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
-from fastapi import Depends, Query, APIRouter
+from fastapi import Depends, Query, APIRouter, Response
 from datetime import date
 import uuid
 
@@ -57,3 +57,17 @@ async def update_transaction(
         user_id=uuid.UUID(user.user_id),
         tx_update=tx_update,
     )
+
+
+@router.delete("/{transaction_id}", status_code=204)
+async def delete_transaction(
+    transaction_id: int,
+    db: AsyncSession = Depends(get_async_session),
+    user: AuthUser = Depends(get_current_user),
+):
+    await TransactionService.delete_transaction(
+        db=db,
+        transaction_id=transaction_id,
+        user_id=uuid.UUID(user.user_id),
+    )
+    return Response(status_code=204)

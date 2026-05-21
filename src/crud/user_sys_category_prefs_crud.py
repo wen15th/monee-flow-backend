@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.user_sys_category_pref import UserSysCategoryRead
 from src.models.user_sys_category_pref import UserSysCategoryPref
+import uuid
 
 
 async def create_user_sys_category_pref(
@@ -30,7 +31,7 @@ async def get_user_sys_category_pref(
     return result.scalar_one_or_none()
 
 
-async def list_user_sys_category_prefs(db: AsyncSession, user_id: str):
+async def list_user_sys_category_prefs(db: AsyncSession, user_id: uuid.UUID):
     result = await db.execute(
         select(UserSysCategoryPref).where(UserSysCategoryPref.user_id == user_id)
     )
