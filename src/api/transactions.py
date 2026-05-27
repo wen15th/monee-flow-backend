@@ -5,7 +5,7 @@ from src.schemas.transaction import TransactionRead, TransactionUpdate
 from src.schemas.common import PaginatedResponse
 from src.services.transaction_service import TransactionService
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
+from typing import Optional, List
 from fastapi import Depends, Query, APIRouter, Response
 from datetime import date
 import uuid
@@ -25,6 +25,7 @@ async def get_transactions(
     min_amount_out: int = Query(0),
     max_amount_out: Optional[int] = Query(None),
     display_currency: Optional[str] = Query(None),
+    status: Optional[List[int]] = Query(None),
     page: Optional[int] = Query(1, ge=1),
     page_size: Optional[int] = Query(10, ge=1, le=100),
     db: AsyncSession = Depends(get_async_session),
@@ -39,6 +40,7 @@ async def get_transactions(
         min_amount_out=min_amount_out,
         max_amount_out=max_amount_out,
         display_currency=display_currency,
+        status=status,
         page=page,
         page_size=page_size,
     )
@@ -56,6 +58,19 @@ async def update_transaction(
         transaction_id=transaction_id,
         user_id=uuid.UUID(user.user_id),
         tx_update=tx_update,
+    )
+
+
+@router.post("/{transaction_id}/confirm", response_model=TransactionRead)
+async def confirm_transaction(
+    transaction_id: int,
+    db: AsyncSession = Depends(get_async_session),
+    user: AuthUser = Depends(get_current_user),
+):
+    return await TransactionService.confirm_transaction(
+        db=db,
+        transaction_id=transaction_id,
+        user_id=uuid.UUID(user.user_id),
     )
 
 

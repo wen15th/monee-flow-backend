@@ -27,6 +27,7 @@ class Transaction(Base):
     description = Column(String(255), nullable=False, server_default="")
     statement_id = Column(BigInteger, nullable=True, index=True)
     status = Column(SmallInteger, nullable=False, server_default="1")
+    duplicate_of_id = Column(BigInteger, nullable=True)
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -44,5 +45,5 @@ class Transaction(Base):
         ),
         Index("idx_transactions_user_txdate", "user_id", "tx_date"),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="chk_currency_iso4217"),
-        CheckConstraint("status IN (1,2)", name="chk_status_valid"),
+        CheckConstraint("status IN (1,2,3)", name="chk_status_valid"),
     )

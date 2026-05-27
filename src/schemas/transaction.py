@@ -12,6 +12,7 @@ class TransactionCreate(BaseModel):
     description: str
     statement_id: Optional[int] = 0
     status: Optional[int] = Field(default=1)
+    duplicate_of_id: Optional[int] = None
 
 
 class TransactionRead(BaseModel):
@@ -28,6 +29,7 @@ class TransactionRead(BaseModel):
     description: str
     statement_id: int
     status: int
+    duplicate_of_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 

@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update, func
-from typing import Optional, List
+from typing import Optional, List, Set
 
 from src.models import Transaction
 from src.schemas.transaction import TransactionCreate, TransactionUpdate
@@ -39,7 +39,7 @@ async def get_transactions_by_user(
     category_id: Optional[int] = None,
     min_amount_out: Optional[int] = None,
     max_amount_out: Optional[int] = None,
-    status: Optional[int] = None,
+    status: Optional[List[int]] = None,
     skip: int = 0,
     limit: Optional[int] = 10,
 ):
@@ -65,7 +65,7 @@ async def get_transactions_by_user(
 
     # Status
     if status is not None:
-        stmt = stmt.where(Transaction.status == status)
+        stmt = stmt.where(Transaction.status.in_(status))
 
     # Count
     count_stmt = select(func.count()).select_from(stmt.subquery())
@@ -83,6 +83,25 @@ async def get_transactions_by_user(
     items = result.scalars().all()
 
     return items, total
+
+
+def get_transactions_for_dedup(
+    db: Session,
+    user_id: uuid.UUID,
+    dates: Set[date],
+) -> List[Transaction]:
+    """Return active transactions for a user whose tx_date is in the given date set."""
+    if not dates:
+        return []
+    stmt = (
+        select(Transaction)
+        .where(
+            Transaction.user_id == user_id,
+            Transaction.status == 1,
+            Transaction.tx_date.in_(dates),
+        )
+    )
+    return db.execute(stmt).scalars().all()
 
 
 async def get_transaction_by_id(

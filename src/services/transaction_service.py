@@ -22,11 +22,14 @@ class TransactionService:
         min_amount_out: Optional[int] = None,
         max_amount_out: Optional[int] = None,
         display_currency: Optional[str] = None,
-        status: Optional[int] = 1,
+        status: Optional[List[int]] = None,
         page: int = 1,
         page_size: int = 10,
     ) -> PaginatedResponse[TransactionRead]:
         """Fetch user transactions with pagination and optional date filtering."""
+
+        if status is None:
+            status = [1, 3]
 
         min_amount_out_minor = (
             to_minor_units(min_amount_out) if min_amount_out is not None else None
@@ -122,6 +125,32 @@ class TransactionService:
         return await transaction_crud.update_transaction(db, db_obj, tx_update)
 
     @staticmethod
+    async def confirm_transaction(
+        db: AsyncSession,
+        transaction_id: int,
+        user_id: uuid.UUID,
+    ):
+        db_obj = await transaction_crud.get_transaction_by_id(db, transaction_id)
+        if not db_obj:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+
+        if db_obj.user_id != user_id:
+            raise HTTPException(
+                status_code=403, detail="Not authorized to update this transaction"
+            )
+
+        if db_obj.status != 3:
+            raise HTTPException(
+                status_code=422, detail="Only potential duplicate transactions can be confirmed"
+            )
+
+        db_obj.status = 1
+        db_obj.duplicate_of_id = None
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
+
+    @staticmethod
     async def delete_transaction(
         db: AsyncSession,
         transaction_id: int,
@@ -135,6 +164,9 @@ class TransactionService:
             raise HTTPException(
                 status_code=403, detail="Not authorized to delete this transaction"
             )
+
+        if db_obj.status not in (1, 3):
+            raise HTTPException(status_code=422, detail="Transaction cannot be deleted")
 
         db_obj.status = 2
         await db.commit()
