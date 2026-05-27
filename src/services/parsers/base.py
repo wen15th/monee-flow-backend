@@ -12,7 +12,7 @@ from src.crud.global_rule_crud import (
     get_global_rule_by_norm_desc,
     create_global_rules_batch,
 )
-from src.crud.transaction_crud import create_transactions_batch
+from src.crud.transaction_crud import create_transactions_batch, get_transactions_for_dedup
 from src.services.categorizers.llm_categorizer import HFTransactionCategorizer
 
 
@@ -96,8 +96,24 @@ class BaseBankParser:
             if failed_descs:
                 logging.error(f"LLM categorize failed: {failed_descs}")
 
-            # 3. Save all transactions
+            # 3. Dedup detection: mark transactions that match existing DB records
             transactions += uncat_transactions
+            new_dates = {t.tx_date for t in transactions}
+            existing = get_transactions_for_dedup(db, user_id, new_dates)
+            # Build lookup: (tx_date, amount, currency, description) -> earliest existing id
+            existing_lookup: dict = {}
+            for ex in existing:
+                key = (ex.tx_date, ex.amount, ex.currency, ex.description)
+                if key not in existing_lookup or ex.id < existing_lookup[key]:
+                    existing_lookup[key] = ex.id
+
+            for t in transactions:
+                key = (t.tx_date, t.amount, t.currency, t.description)
+                if key in existing_lookup:
+                    t.status = 3
+                    t.duplicate_of_id = existing_lookup[key]
+
+            # 4. Save all transactions
             create_transactions_batch(db, transactions)
             logging.info(
                 f"[{self.__class__.__name__}] user_id={user_id}, parsed {len(transactions)} transactions"

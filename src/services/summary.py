@@ -1,6 +1,5 @@
 import logging
 import uuid
-from typing import Optional
 from datetime import date
 from collections import defaultdict
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +11,7 @@ from src.schemas.summary import (
     MonthlySummary,
     SectionSummary,
 )
+from typing import Optional, List
 from src.helpers.money import to_minor_units
 from src.crud import transaction_crud as tx_crud
 from decimal import Decimal
@@ -27,8 +27,11 @@ class SummaryService:
         min_amount_out: Optional[int] = None,
         max_amount_out: Optional[int] = None,
         display_currency: Optional[str] = None,
-        status: Optional[int] = 1,
+        status: Optional[List[int]] = None,
     ) -> SummaryResponse:
+
+        if status is None:
+            status = [1]
 
         min_amount_out_minor = (
             to_minor_units(min_amount_out) if min_amount_out is not None else None
