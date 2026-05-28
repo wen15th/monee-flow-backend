@@ -13,7 +13,7 @@ from src.crud.global_rule_crud import (
     create_global_rules_batch,
 )
 from src.crud.transaction_crud import create_transactions_batch, get_transactions_for_dedup
-from src.services.categorizers.llm_categorizer import HFTransactionCategorizer
+from src.services.categorizers.llm_categorizer import LLMTransactionCategorizer
 
 
 class BaseBankParser:
@@ -75,7 +75,7 @@ class BaseBankParser:
             # 2. Call LLM for uncategorized
             failed_descs = []
             if uncat_desc_set:
-                categorizer = HFTransactionCategorizer()
+                categorizer = LLMTransactionCategorizer()
                 auto_category_list = categorizer.categorize(list(uncat_desc_set))
 
                 new_global_rules = [GlobalRuleCreate(**d) for d in auto_category_list]
