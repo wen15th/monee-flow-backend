@@ -4,7 +4,7 @@ from src.services.statement_service import StatementService
 from src.schemas.enums import BankEnum
 from src.schemas.user import AuthUser
 from src.schemas.common import PaginatedResponse
-from src.schemas.statement import StatementRead, StatementDeleteResult
+from src.schemas.statement import StatementRead, StatementDeleteResult, StatementStatusRead
 from fastapi import (
     Depends,
     BackgroundTasks,
@@ -58,10 +58,26 @@ async def upload_statement(
         file_path=file_path,
     )
 
-    return {"message": "Upload successful", "file_path": file_path}
+    return {"message": "Upload successful", "file_path": file_path, "statement_id": stmt_id}
 
 
 # api
+@router.get("/{statement_id}/status", response_model=StatementStatusRead)
+async def get_statement_status(
+    statement_id: int,
+    db: AsyncSession = Depends(get_async_session),
+    user: AuthUser = Depends(get_current_user),
+):
+    result = await StatementService.get_statement_status(
+        db=db,
+        statement_id=statement_id,
+        user_id=uuid.UUID(user.user_id),
+    )
+    if result is None:
+        raise HTTPException(status_code=404, detail="Statement not found")
+    return result
+
+
 @router.get("", response_model=PaginatedResponse[StatementRead])
 async def get_statements(
     page: int = 1,

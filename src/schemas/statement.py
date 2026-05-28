@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict, UUID4, Field
 from typing import Optional
 from datetime import datetime
+from src.schemas.enums import StatementStatus
 
 
 class StatementCreate(BaseModel):
@@ -10,7 +11,12 @@ class StatementCreate(BaseModel):
     end_time: datetime
     source: str = Field(default="")
     currency: str
-    status: Optional[int] = Field(default=1)
+    status: Optional[int] = Field(default=StatementStatus.PROCESSING)
+
+
+class StatementStatusRead(BaseModel):
+    statement_id: int
+    status_label: str
 
 
 class StatementRead(BaseModel):
