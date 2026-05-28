@@ -1,8 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from sqlalchemy import select, update, func
-from typing import Optional, List
+from typing import Optional
 from ..models import Statement
 from ..schemas.statement import StatementCreate
+from ..schemas.enums import StatementStatus
 
 import uuid
 
@@ -18,14 +20,14 @@ async def create_statement(db: AsyncSession, statement_data: StatementCreate):
 async def get_statements_by_user(
     db: AsyncSession,
     user_id: uuid.UUID,
-    status: Optional[int] = 1,
     skip: int = 0,
     limit: Optional[int] = 10,
 ):
-    stmt = select(Statement).where(Statement.user_id == user_id)
-    # Where: status
-    if status is not None:
-        stmt = stmt.where(Statement.status == status)
+    stmt = (
+        select(Statement)
+        .where(Statement.user_id == user_id)
+        .where(Statement.status != StatementStatus.DELETED)
+    )
     # Count
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total_result = await db.execute(count_stmt)
@@ -49,6 +51,13 @@ async def get_statement_by_id(
     stmt = select(Statement).where(Statement.id == statement_id)
     result = await db.execute(stmt)
     return result.scalars().first()
+
+
+def update_statement_status(db: Session, statement_id: int, status: int) -> None:
+    db.execute(
+        update(Statement).where(Statement.id == statement_id).values(status=status)
+    )
+    db.commit()
 
 
 async def soft_delete_by_id(

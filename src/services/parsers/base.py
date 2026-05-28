@@ -13,11 +13,23 @@ from src.crud.global_rule_crud import (
     create_global_rules_batch,
 )
 from src.crud.transaction_crud import create_transactions_batch, get_transactions_for_dedup
-from src.services.categorizers.llm_categorizer import HFTransactionCategorizer
+from src.crud.statement_crud import update_statement_status
+from src.schemas.enums import StatementStatus
+from src.services.categorizers.llm_categorizer import LLMTransactionCategorizer
 
 
 class BaseBankParser:
     def parse(self, user_id: uuid.UUID, stmt_id: int, currency: str, file_path: str):
+        try:
+            self._parse(user_id, stmt_id, currency, file_path)
+            with SessionLocal() as db:
+                update_statement_status(db, stmt_id, StatementStatus.COMPLETED)
+        except Exception as e:
+            logging.error(f"[{self.__class__.__name__}] Parse failed for stmt_id={stmt_id}: {e}")
+            with SessionLocal() as db:
+                update_statement_status(db, stmt_id, StatementStatus.FAILED)
+
+    def _parse(self, user_id: uuid.UUID, stmt_id: int, currency: str, file_path: str):
         # Download from S3 and read
         header = self.get_csv_header()
         content = s3.download_file(file_path)
@@ -75,7 +87,7 @@ class BaseBankParser:
             # 2. Call LLM for uncategorized
             failed_descs = []
             if uncat_desc_set:
-                categorizer = HFTransactionCategorizer()
+                categorizer = LLMTransactionCategorizer()
                 auto_category_list = categorizer.categorize(list(uncat_desc_set))
 
                 new_global_rules = [GlobalRuleCreate(**d) for d in auto_category_list]

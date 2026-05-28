@@ -5,21 +5,27 @@ Assign each transaction to one of these categories:
 
 1. Housing
 2. Utilities
-3. Groceries
+3. Groceries & Supermarket
 4. Food & Dining
 5. Transportation
 6. Shopping
-7. Health & Medical
-8. Fitness
-9. Entertainment
-10. Subscription
-11. Education
+7. Pets
+8. Health & Medical
+9. Fitness
+10. Subscription & Membership
+11. Entertainment
 12. Other
-13. Pets
-14. Insurance
 
-Return a JSON array with these fields for each transaction:
-- norm_desc: exactly as provided
-- category_id
-- category_name
-- note: very short description of merchant or main item
+EXAMPLE JSON OUTPUT:
+{
+  "trans_category_list": [
+    {
+      "norm_desc": "WALMART GROCERY",
+      "category_id": 3,
+      "category_name": "Groceries",
+      "note": "Walmart grocery purchase"
+    }
+  ]
+}
+
+One entry per transaction. Do not include any text outside the JSON object.

@@ -3,12 +3,18 @@ import logging
 import asyncio
 from pathlib import Path
 from fastapi import UploadFile
-from typing import Optional, List
+from typing import Optional, List, Any, Coroutine
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.schemas.statement import StatementStatusRead
 from src.schemas.common import PaginatedResponse
-from src.schemas.enums import BankEnum
-from src.schemas.statement import StatementCreate, StatementRead, StatementDeleteResult
+from src.schemas.enums import BankEnum, StatementStatus
+from src.schemas.statement import (
+    StatementCreate,
+    StatementRead,
+    StatementDeleteResult,
+    StatementStatusRead,
+)
 from src.crud import transaction_crud, statement_crud
 from src.core import s3
 import os
@@ -23,14 +29,20 @@ class StatementService:
     class Conflict(Exception):
         pass
 
-    STATUS_ACTIVE = 1
-    STATUS_DELETED = 2
+    STATUS_LABELS = {
+        StatementStatus.COMPLETED: "completed",
+        StatementStatus.DELETED: "deleted",
+        StatementStatus.PROCESSING: "processing",
+        StatementStatus.FAILED: "failed",
+    }
 
     def __init__(self, tmp_dir: str = None):
         self.tmp_dir = Path(tmp_dir or os.getenv("TMP_DATA_PATH", "./tmp_data"))
         self.tmp_dir.mkdir(parents=True, exist_ok=True)
 
-    def generate_s3_key(self, original_name: str, bank: BankEnum, user_id: uuid.UUID) -> str:
+    def generate_s3_key(
+        self, original_name: str, bank: BankEnum, user_id: uuid.UUID
+    ) -> str:
         """Generate S3 key: statements/{user_id}/{bank}_{YYYYMMDD_HHMMSS}.csv"""
         _, ext = os.path.splitext(original_name.strip())
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -74,18 +86,33 @@ class StatementService:
         user_id: uuid.UUID,
         page: int = 1,
         page_size: int = 10,
-        status: Optional[int] = 1,
     ) -> PaginatedResponse[StatementRead]:
         skip = (page - 1) * page_size
 
         statements, total = await statement_crud.get_statements_by_user(
-            db, user_id, status=status, skip=skip, limit=page_size
+            db, user_id, skip=skip, limit=page_size
         )
         return PaginatedResponse[StatementRead](
             items=[StatementRead.model_validate(stmt) for stmt in statements],
             total=total,
             page=page,
             page_size=page_size,
+        )
+
+    @staticmethod
+    async def get_statement_status(
+        db: AsyncSession,
+        statement_id: int,
+        user_id: uuid.UUID,
+    ) -> StatementStatusRead | None:
+        stmt = await statement_crud.get_statement_by_id(db, statement_id)
+        if stmt is None or stmt.user_id != user_id:
+            return None
+        return StatementStatusRead(
+            statement_id=statement_id,
+            status_label=StatementService.STATUS_LABELS.get(
+                StatementStatus(stmt.status), "unknown"
+            ),
         )
 
     async def delete_statement(
@@ -111,16 +138,20 @@ class StatementService:
         if stmt is None or stmt.user_id != user_id:
             raise self.NotFoundOrNoAccess()
 
-        # TODO: if statement is under processing, it cannot be deleted
-        # if stmt.status == SOME_PROCESSING_STATUS:
-        #     raise self.Conflict()
+        if stmt.status == StatementStatus.PROCESSING:
+            raise self.Conflict()
 
         file_path = getattr(stmt, "s3_key", None)
         current_status = getattr(stmt, "status", None)
 
         # 2) If already deleted => idempotent success
-        if current_status == self.STATUS_DELETED:
-            return
+        if current_status == StatementStatus.DELETED:
+            return StatementDeleteResult(
+                statement_id=statement_id,
+                deleted=True,
+                transactions_affected=0,
+                file_deleted=False,
+            )
 
         # 3) Soft-delete in DB within a transaction
         try:
@@ -128,7 +159,7 @@ class StatementService:
             updated = await statement_crud.soft_delete_by_id(
                 db=db,
                 statement_id=statement_id,
-                deleted_status=self.STATUS_DELETED,
+                deleted_status=StatementStatus.DELETED,
             )
             if updated == 0:
                 raise self.NotFoundOrNoAccess()
@@ -139,7 +170,7 @@ class StatementService:
                 tx_affected = await transaction_crud.soft_delete_by_statement_id(
                     db=db,
                     statement_id=statement_id,
-                    deleted_status=self.STATUS_DELETED,
+                    deleted_status=StatementStatus.DELETED,
                 )
 
             await db.commit()
